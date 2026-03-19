@@ -1,0 +1,54 @@
+# Full Benchmark Configuration
+# This runs all combinations of models, prompting strategies, decoding strategies, and datasets
+
+# Models to evaluate
+models:
+  - qwen2.5-3b
+  # - mistral-7b  # Uncomment for stronger baseline if GPU memory allows
+  # - llama2-7b  # Uncomment if you have access
+
+# Prompting strategies
+prompting_strategies:
+  - direct
+  - cot
+  - tot
+  - tog
+  - reflexion
+
+# Decoding strategies  
+decoding_strategies:
+  - greedy
+  - beam_search
+  - top_p
+  - combined
+
+# Datasets
+datasets:
+  - gsm8k
+  - logiqa
+  # - squad  # Uncomment to include reading comprehension
+
+# Common settings
+quantization: "4bit"  # Use 4-bit quantization to reduce memory
+max_samples: 100      # Limit samples for faster iteration (set to null for full dataset)
+split: test
+seed: 42
+output_dir: results/full_benchmark
+
+# Generation settings
+max_new_tokens: 512
+
+# Decoding-specific settings
+num_beams: 5
+top_k: 50
+top_p: 0.9
+temperature: 0.7
+
+# Prompting-specific settings
+use_few_shot: false
+tot_num_branches: 3
+tot_max_depth: 3
+reflexion_max_iterations: 3
+tog_num_hypotheses: 3
+tog_max_depth: 4
+tog_exploration_width: 2

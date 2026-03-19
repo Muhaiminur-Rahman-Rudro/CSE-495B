@@ -1,0 +1,174 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyTorch & ML
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+
+# HuggingFace Cache (models are HUGE)
+.cache/
+cache/
+huggingface_cache/
+models/
+*.lock
+
+# Results & Outputs
+results/
+outputs/
+logs/
+*.log
+experiments/results/
+wandb/
+tensorboard/
+
+# Data (large datasets)
+data/
+datasets/
+*.csv
+*.json
+*.jsonl
+!experiments/configs/*.yaml
+!experiments/configs/*.json
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+*-checkpoint.ipynb
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets.yaml
+credentials.json
+
+# HuggingFace Tokens (NEVER COMMIT THESE)
+hf_token.txt
+.huggingface/
+token.txt
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Profiling
+*.prof
+*.lprof
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Cloud environment specific
+/workspace/cache/
+/workspace/results/
+*.tar.gz
+*.zip
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# Large model files (if accidentally copied locally)
+*.safetensors
+*.bin
+pytorch_model.bin
+model.safetensors
+
+# Compiled translations
+*.mo
+
+# Backup files
+*~
+*.orig
+
+# Distribution / packaging
+.Python
+pip-wheel-metadata/
+
+# Unit test / coverage reports
+nosetests.xml
+test-reports/

@@ -1,0 +1,26 @@
+# Quick Test Configuration
+# Use this for rapid iteration and testing
+
+models:
+  - qwen2.5-3b
+
+prompting_strategies:
+  - direct
+  - cot
+
+decoding_strategies:
+  - greedy
+  - top_p
+
+datasets:
+  - gsm8k
+
+# Settings for quick testing
+quantization: "4bit"
+max_samples: 20  # Very small for testing
+split: test
+seed: 42
+output_dir: results/quick_test
+
+max_new_tokens: 256
+temperature: 0.7
