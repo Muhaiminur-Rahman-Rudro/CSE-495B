@@ -262,6 +262,16 @@ class ExperimentRunner:
                 })
             except Exception as e:
                 logger.error(f"Error processing sample {sample.idx}: {e}")
+
+                # CUDA device-side assert corrupts the current CUDA context.
+                # Stop early so users can restart runtime and avoid misleading results.
+                if "device-side assert triggered" in str(e).lower():
+                    raise RuntimeError(
+                        "CUDA device-side assert triggered during generation. "
+                        "Please restart the Colab runtime and rerun with safer decoding settings "
+                        "(e.g., greedy or lower-temperature sampling)."
+                    ) from e
+
                 predictions.append({
                     "final_answer": "",
                     "reasoning_trace": [],

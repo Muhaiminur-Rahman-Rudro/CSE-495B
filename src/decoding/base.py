@@ -24,6 +24,8 @@ class DecodingConfig:
     # Additional parameters
     no_repeat_ngram_size: int = 0
     min_new_tokens: int = 0
+    remove_invalid_values: bool = True
+    renormalize_logits: bool = True
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for HuggingFace generate()."""
@@ -40,6 +42,8 @@ class DecodingConfig:
             "num_return_sequences": self.num_return_sequences,
             "no_repeat_ngram_size": self.no_repeat_ngram_size,
             "min_new_tokens": self.min_new_tokens,
+            "remove_invalid_values": self.remove_invalid_values,
+            "renormalize_logits": self.renormalize_logits,
         }
 
 

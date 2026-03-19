@@ -120,8 +120,8 @@ def compute_accuracy(
                     correct += 1
                     continue
         
-        # Fuzzy match: check if reference is contained in prediction
-        if ref_norm in pred_norm or pred_norm in ref_norm:
+        # Fuzzy match for non-empty strings only.
+        if pred_norm and ref_norm and (ref_norm in pred_norm or pred_norm in ref_norm):
             correct += 1
     
     n = len(predictions)

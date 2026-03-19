@@ -24,13 +24,11 @@ def optimize_for_gpu():
     # Enable cudnn benchmarking for faster convolutions
     torch.backends.cudnn.benchmark = True
 
-    # Set default dtype to bfloat16 if available
+    # Do not change global default dtype; model loader controls precision.
     if torch.cuda.is_bf16_supported():
-        torch.set_default_dtype(torch.bfloat16)
-        logger.info("Using bfloat16 precision")
+        logger.info("bfloat16 is supported on this GPU")
     else:
-        torch.set_default_dtype(torch.float16)
-        logger.info("Using float16 precision")
+        logger.info("bfloat16 is not supported; model loader will use float16/float32")
 
     # Log GPU info
     for i in range(torch.cuda.device_count()):

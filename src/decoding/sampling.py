@@ -39,12 +39,13 @@ class TopKSampling(BaseDecodingStrategy):
         return f"top_k_{self.top_k}_t{self.temperature}"
     
     def get_config(self) -> DecodingConfig:
+        safe_temperature = max(0.1, float(self.temperature))
         return DecodingConfig(
             max_new_tokens=self.max_new_tokens,
             do_sample=True,
             top_k=self.top_k,
             top_p=1.0,  # Disable top-p
-            temperature=self.temperature,
+            temperature=safe_temperature,
             repetition_penalty=self.repetition_penalty,
         )
 
@@ -81,12 +82,13 @@ class TopPSampling(BaseDecodingStrategy):
         return f"top_p_{self.top_p}_t{self.temperature}"
     
     def get_config(self) -> DecodingConfig:
+        safe_temperature = max(0.1, float(self.temperature))
         return DecodingConfig(
             max_new_tokens=self.max_new_tokens,
             do_sample=True,
             top_k=0,  # Disable top-k
             top_p=self.top_p,
-            temperature=self.temperature,
+            temperature=safe_temperature,
             repetition_penalty=self.repetition_penalty,
         )
 
@@ -119,12 +121,13 @@ class CombinedSampling(BaseDecodingStrategy):
         return f"combined_k{self.top_k}_p{self.top_p}_t{self.temperature}"
     
     def get_config(self) -> DecodingConfig:
+        safe_temperature = max(0.1, float(self.temperature))
         return DecodingConfig(
             max_new_tokens=self.max_new_tokens,
             do_sample=True,
             top_k=self.top_k,
             top_p=self.top_p,
-            temperature=self.temperature,
+            temperature=safe_temperature,
             repetition_penalty=self.repetition_penalty,
         )
 
@@ -154,11 +157,12 @@ class TemperatureSampling(BaseDecodingStrategy):
         return f"temperature_{self.temperature}"
     
     def get_config(self) -> DecodingConfig:
+        safe_temperature = max(0.1, float(self.temperature))
         return DecodingConfig(
             max_new_tokens=self.max_new_tokens,
             do_sample=True,
             top_k=0,
             top_p=1.0,
-            temperature=self.temperature,
+            temperature=safe_temperature,
             repetition_penalty=self.repetition_penalty,
         )
