@@ -15,6 +15,7 @@ from .metrics import (
     compute_accuracy,
     compute_reasoning_metrics,
     compute_hallucination_score,
+    get_reasoning_step_count,
     EvaluationResult,
 )
 
@@ -96,7 +97,10 @@ class ReasoningEvaluator:
                 "predicted": pred["final_answer"],
                 "reference": ref["answer"],
                 "correct": pred_answers[i].strip().lower() == ref_answers[i].strip().lower(),
-                "num_reasoning_steps": len(pred.get("reasoning_trace", [])),
+                "num_reasoning_steps": get_reasoning_step_count(
+                    pred.get("reasoning_trace", []),
+                    pred.get("raw_output", pred.get("final_answer", "")),
+                ),
             }
             per_sample_results.append(sample_result)
         

@@ -10,6 +10,48 @@ import re
 import numpy as np
 
 
+def _infer_reasoning_steps_from_output(text: str) -> int:
+    """Infer reasoning step count from raw text when explicit trace is missing."""
+    if not text:
+        return 0
+
+    cleaned = text.strip()
+    if not cleaned:
+        return 0
+
+    lines = [line.strip() for line in cleaned.splitlines() if line.strip()]
+
+    marker_pattern = re.compile(
+        r"^(step\s*\d+\b|\d+[\).]\s+|first\b|second\b|third\b|then\b|next\b|finally\b|because\b)",
+        re.IGNORECASE,
+    )
+    marker_count = sum(1 for line in lines if marker_pattern.match(line))
+    if marker_count > 0:
+        return marker_count
+
+    sentence_candidates = [
+        s.strip()
+        for s in re.split(r"(?<=[.!?])\s+", cleaned)
+        if s.strip()
+    ]
+    if len(sentence_candidates) >= 2:
+        return min(len(sentence_candidates), 12)
+
+    # Single line with operators often indicates compressed reasoning.
+    if re.search(r"[=+\-*/]", cleaned):
+        return 1
+
+    return 0
+
+
+def get_reasoning_step_count(reasoning_trace: List[str], raw_output: str) -> int:
+    """Use explicit trace when available, otherwise infer from generated text."""
+    trace_len = len(reasoning_trace or [])
+    if trace_len > 0:
+        return trace_len
+    return _infer_reasoning_steps_from_output(raw_output)
+
+
 @dataclass
 class EvaluationResult:
     """Container for evaluation results."""
@@ -146,7 +188,10 @@ def compute_reasoning_metrics(
     Returns:
         Dictionary with reasoning metrics
     """
-    num_steps = [len(trace) for trace in reasoning_traces]
+    num_steps = [
+        get_reasoning_step_count(trace, output)
+        for trace, output in zip(reasoning_traces, raw_outputs)
+    ]
     output_lengths = [len(output.split()) for output in raw_outputs]
     
     metrics = {
