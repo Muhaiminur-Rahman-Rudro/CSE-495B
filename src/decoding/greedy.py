@@ -26,8 +26,8 @@ class GreedyDecoding(BaseDecodingStrategy):
     def __init__(
         self,
         max_new_tokens: int = 512,
-        repetition_penalty: float = 1.0,
-        no_repeat_ngram_size: int = 0,
+        repetition_penalty: float = 1.2,
+        no_repeat_ngram_size: int = 3,
     ):
         self.max_new_tokens = max_new_tokens
         self.repetition_penalty = repetition_penalty

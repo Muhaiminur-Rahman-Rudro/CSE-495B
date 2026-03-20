@@ -73,51 +73,98 @@ class BasePromptStrategy(ABC):
         Returns:
             PromptResult containing the answer and reasoning trace
         """
-        pass
+        ...
     
     def _generate_text(self, prompt: str, **kwargs) -> str:
         """Helper method to generate text from the model."""
         merged_config = {**self.generation_config, **kwargs}
-        
-        inputs = self.tokenizer(
-            prompt,
-            return_tensors="pt",
-            truncation=True,
-            max_length=merged_config.get("max_input_length", 2048),
-        ).to(self.model.device)
-        
+
+        max_input = merged_config.pop("max_input_length", 2048)
+        max_new = merged_config.pop("max_new_tokens", 512)
+
+        # Use chat template when the tokenizer supports it (e.g. Qwen-Instruct).
+        if hasattr(self.tokenizer, "apply_chat_template") and self.tokenizer.chat_template:
+            messages = [{"role": "user", "content": prompt}]
+            input_text = self.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True,
+            )
+            inputs = self.tokenizer(
+                input_text,
+                return_tensors="pt",
+                truncation=True,
+                max_length=max_input,
+            ).to(self.model.device)
+        else:
+            inputs = self.tokenizer(
+                prompt,
+                return_tensors="pt",
+                truncation=True,
+                max_length=max_input,
+            ).to(self.model.device)
+
         outputs = self.model.generate(
             **inputs,
-            max_new_tokens=merged_config.get("max_new_tokens", 512),
+            max_new_tokens=max_new,
             pad_token_id=self.tokenizer.pad_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
-            **{k: v for k, v in merged_config.items() 
+            **{k: v for k, v in merged_config.items()
                if k not in ["max_input_length", "max_new_tokens"]},
         )
-        
+
         generated_tokens = outputs[0][inputs["input_ids"].shape[1]:]
-        return self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
-    
+        text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+
+        # Strip repeated blocks that 4-bit quantised models sometimes produce.
+        text = self._strip_repetitions(text)
+        return text
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _strip_repetitions(text: str, min_block: int = 60) -> str:
+        """Remove large repeated blocks from generated text."""
+        if len(text) < min_block * 2:
+            return text
+        # Try to find a block that repeats immediately after itself.
+        for size in range(len(text) // 2, min_block - 1, -1):
+            block = text[:size]
+            if text[size: size + len(block)] == block:
+                return block
+        return text
+
+    # ------------------------------------------------------------------
     def extract_answer(self, text: str) -> str:
         """
         Extract the final answer from generated text.
         Override in subclasses for custom extraction logic.
         """
-        # Look for common answer patterns
         import re
-        
-        patterns = [
-            r"(?:the answer is|answer:)\s*(.+?)(?:\.|$)",
-            r"(?:therefore,?|thus,?|so,?)\s*(.+?)(?:\.|$)",
-            r"####\s*(.+?)(?:\n|$)",  # GSM8K format
-        ]
-        
-        text_lower = text.lower()
-        for pattern in patterns:
-            match = re.search(pattern, text_lower, re.IGNORECASE)
-            if match:
-                return match.group(1).strip()
-        
-        # Return last line as fallback
+
+        # 1) GSM8K #### format
+        m = re.search(r'####\s*([^\n]+)', text)
+        if m:
+            return m.group(1).strip().rstrip('.,;:!?')
+
+        # 2) "the answer is <X>" / "answer: <X>"
+        m = re.search(
+            r'(?:the answer is|answer:)\s*(.+?)(?:\.|,|\n|$)',
+            text, re.IGNORECASE,
+        )
+        if m:
+            return m.group(1).strip().rstrip('.,;:!?')
+
+        # 3) "therefore / thus / so" sentence
+        m = re.search(
+            r'(?:therefore|thus|so),?\s*(?:the answer is\s*)?(.+?)(?:\.|,|\n|$)',
+            text, re.IGNORECASE,
+        )
+        if m:
+            return m.group(1).strip().rstrip('.,;:!?')
+
+        # 4) Last number in the text (arithmetic fallback)
+        numbers = re.findall(r'-?\d+(?:,\d{3})*(?:\.\d+)?', text)
+        if numbers:
+            return numbers[-1].replace(',', '')
+
+        # 5) Last non-empty line
         lines = [l.strip() for l in text.strip().split('\n') if l.strip()]
         return lines[-1] if lines else text.strip()

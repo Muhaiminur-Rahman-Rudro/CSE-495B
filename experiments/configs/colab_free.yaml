@@ -23,7 +23,7 @@ seed: 42
 output_dir: results/colab_free
 
 # Keep generation short to avoid OOM/timeouts
-max_new_tokens: 256
+max_new_tokens: 512
 
 # Decoding settings
 num_beams: 3

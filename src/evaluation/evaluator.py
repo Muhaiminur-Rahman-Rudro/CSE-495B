@@ -91,12 +91,24 @@ class ReasoningEvaluator:
         # Per-sample results
         per_sample_results = []
         for i, (pred, ref) in enumerate(zip(predictions, references)):
+            pred_norm = pred_answers[i].strip().lower()
+            ref_norm = ref_answers[i].strip().lower()
+
+            # Use numeric comparison for arithmetic tasks
+            is_correct = (pred_norm == ref_norm)
+            if not is_correct and self.task_type == "arithmetic":
+                from .metrics import extract_number
+                pred_num = extract_number(pred_answers[i])
+                ref_num = extract_number(ref_answers[i])
+                if pred_num is not None and ref_num is not None:
+                    is_correct = abs(pred_num - ref_num) < 1e-6
+
             sample_result = {
                 "idx": i,
                 "question": questions[i] if questions else None,
                 "predicted": pred["final_answer"],
                 "reference": ref["answer"],
-                "correct": pred_answers[i].strip().lower() == ref_answers[i].strip().lower(),
+                "correct": is_correct,
                 "num_reasoning_steps": get_reasoning_step_count(
                     pred.get("reasoning_trace", []),
                     pred.get("raw_output", pred.get("final_answer", "")),

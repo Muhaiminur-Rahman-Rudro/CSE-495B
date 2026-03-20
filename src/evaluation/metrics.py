@@ -87,21 +87,28 @@ class EvaluationResult:
 
 def normalize_answer(answer: str) -> str:
     """Normalize answer for comparison."""
+    # Strip GSM8K #### prefix and everything before it.
+    if '####' in answer:
+        answer = answer.split('####')[-1]
+
     # Remove extra whitespace
     answer = " ".join(answer.split())
-    
+
     # Convert to lowercase
     answer = answer.lower()
-    
+
     # Remove punctuation at the end
     answer = answer.rstrip('.,!?;:')
-    
+
     # Remove common prefixes
     prefixes = ['the answer is', 'answer:', 'therefore', 'thus', 'so']
     for prefix in prefixes:
         if answer.startswith(prefix):
             answer = answer[len(prefix):].strip()
-    
+
+    # Remove commas in numbers ("1,000" -> "1000")
+    answer = answer.replace(',', '')
+
     return answer.strip()
 
 
@@ -145,26 +152,27 @@ def compute_accuracy(
     for pred, ref in zip(predictions, references):
         pred_norm = normalize_answer(pred)
         ref_norm = normalize_answer(ref)
-        
-        # Exact match
+
+        # Exact normalised match
         if pred_norm == ref_norm:
             exact_matches += 1
             correct += 1
             continue
-        
-        # For arithmetic tasks, compare numbers
+
+        # For arithmetic tasks, compare numbers (this is the primary metric)
         if task_type == "arithmetic":
             pred_num = extract_number(pred)
             ref_num = extract_number(ref)
-            
+
             if pred_num is not None and ref_num is not None:
                 if abs(pred_num - ref_num) < 1e-6:
                     correct += 1
                     continue
-        
-        # Fuzzy match for non-empty strings only.
-        if pred_norm and ref_norm and (ref_norm in pred_norm or pred_norm in ref_norm):
-            correct += 1
+
+        # Fuzzy match — only for non-arithmetic tasks and non-empty strings.
+        if task_type != "arithmetic" and pred_norm and ref_norm:
+            if ref_norm in pred_norm or pred_norm in ref_norm:
+                correct += 1
     
     n = len(predictions)
     return {
